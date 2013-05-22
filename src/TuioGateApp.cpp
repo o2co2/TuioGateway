@@ -27,7 +27,6 @@ public:
     void mouseDown( MouseEvent event )
     {
         mouseDrag(event);
-        mPrevCursorPos = mCursorPos;
     }
 
     void mouseUp( MouseEvent event )
@@ -41,17 +40,26 @@ public:
         mCursorPos = event.getPos();
     }
 
-    enum {USAGE_CLIENT, USAGE_SERVER, USAGE_GATEWAY, USAGE_COUNT};
+    enum {USAGE_CLIENT, USAGE_SERVER, USAGE_ROUTER, USAGE_COUNT};
 
     void onConnect()
     {
-        APP_USAGE = math<int>::clamp(APP_USAGE, USAGE_CLIENT, USAGE_GATEWAY);
+        APP_USAGE = math<int>::clamp(APP_USAGE, USAGE_CLIENT, USAGE_ROUTER);
 
         mCursorPressed = false;
 
         mTuioClient.disconnect();
         mTuioServer = osc::Sender();
         mOscServer = osc::Sender();
+
+        HWND hWnd = getRenderer()->getHwnd();
+        const char* usageDesc[] = 
+        {
+            "TuioGateway - Client Mode",
+            "TuioGateway - Server Mode",
+            "TuioGateway - Router Mode",
+        };
+        ::SetWindowTextA( hWnd,  usageDesc[APP_USAGE]);
 
         char buffer[MAX_PATH] = {0};
 
@@ -146,10 +154,9 @@ public:
             mActiveTouches.push_back(tuio::Cursor(
                 "", -1, Vec2f(mCursorPos.x/getWindowWidth(), mCursorPos.y/getWindowHeight())
                 ));
-            mPrevCursorPos = mCursorPos;
         }
 
-        if (mCurrentAppUsage == USAGE_SERVER || mCurrentAppUsage == USAGE_GATEWAY)
+        if (mCurrentAppUsage == USAGE_SERVER || mCurrentAppUsage == USAGE_ROUTER)
         {
             sendTuioMessage(mTuioServer, mActiveTouches);
             sendOscMessages(mOscServer, mActiveTouches);
@@ -179,10 +186,6 @@ public:
     void keyDown( KeyEvent event ) {
         switch (event.getCode())
         {
-//         case KeyEvent::KEY_SPACE:
-//             {
-//                 setFullScreen( ! isFullScreen() ); 
-//             }break;
         case KeyEvent::KEY_ESCAPE:
             {
                 quit();
@@ -271,8 +274,12 @@ public:
             float x0 = cellSize * (REMOTE_DISPLAY_ID - 1);
             float x1 = cellSize * (REMOTE_DISPLAY_ID);
 
-            for (vector<tuio::Cursor>::const_iterator it = cursors.begin(); it != cursors.end(); ++it)
+            int cursorIdx = 0;
+            for (vector<tuio::Cursor>::const_iterator it = cursors.begin(); it != cursors.end(); ++it, cursorIdx++)
             {
+                if (cursorIdx == MAX_CURSOR_COUNT)
+                    break;
+
                 float x = it->getPos().x;
                 float y = it->getPos().y;
 
@@ -282,21 +289,21 @@ public:
                 if (x <= x0 || x >= x1 || y <= 0 || y >= 1.0f)
                     continue;
 
+                std::string addr = "/cursor/" + toString(cursorIdx);
                 osc::Bundle bundle;
                 {
                     osc::Message m;
-                    m.setAddress("/cursor/x");
+                    m.setAddress(addr + "/x");
                     m.addFloatArg(x);
                     bundle.addMessage(m);
                 }
                 {
                     osc::Message m;
-                    m.setAddress("/cursor/y");
+                    m.setAddress(addr + "/y");
                     m.addFloatArg(y);
                     bundle.addMessage(m);
                 }
                 sender.sendBundle(bundle);
-                break;// only send first valid cursor
             }
         }
     }
@@ -314,7 +321,7 @@ private:
 
     mutex                       mMutex;
     bool                        mCursorPressed;
-    Vec2f                       mCursorPos, mPrevCursorPos;
+    Vec2f                       mCursorPos;
 
     int                         mCurrentAppUsage;
     vector<tuio::Cursor>        mActiveTouches;
