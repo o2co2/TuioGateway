@@ -53,13 +53,13 @@ public:
         mOscServer = osc::Sender();
 
         HWND hWnd = getRenderer()->getHwnd();
-        const char* usageDesc[] = 
+        const char* kUsageDescs[] = 
         {
             "TuioGateway - Client Mode",
             "TuioGateway - Server Mode",
             "TuioGateway - Router Mode",
         };
-        ::SetWindowTextA( hWnd,  usageDesc[APP_USAGE]);
+        ::SetWindowTextA( hWnd,  kUsageDescs[APP_USAGE]);
 
         char buffer[MAX_PATH] = {0};
 
