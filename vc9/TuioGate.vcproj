@@ -63,6 +63,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="cinder_d.lib osc_d.lib"
+				OutputFile="$(SolutionDir)\..\bin\$(ProjectName).exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\..\..\blocks\osc\lib\vc9;..\..\..\..\..\lib;..\..\..\..\..\lib\msw"
 				GenerateDebugInformation="true"
@@ -138,6 +139,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="cinder.lib osc.lib"
+				OutputFile="$(SolutionDir)\..\bin\$(ProjectName).exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\..\..\blocks\osc\lib\vc9;..\..\..\..\..\lib;..\..\..\..\..\lib\msw"
 				GenerateDebugInformation="true"
